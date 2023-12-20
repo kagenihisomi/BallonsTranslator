@@ -1,4 +1,5 @@
 
+from dataclasses import asdict
 from typing import List, Union, Tuple
 import numpy as np
 import copy
@@ -23,6 +24,7 @@ from utils import shared
 from utils.imgproc_utils import extract_ballon_region, rotate_polygons, get_block_mask
 from utils.text_processing import seg_text, is_cjk
 from utils.text_layout import layout_text
+from utils.logger import logger as LOGGER
 
 
 class CreateItemCommand(QUndoCommand):
@@ -601,6 +603,8 @@ class SceneTextManager(QObject):
     def onFormatTextblks(self, fmt: FontFormat = None):
         if fmt is None:
             fmt = self.formatpanel.global_format
+
+        LOGGER.info(f'Apply Format {fmt}')
         self.apply_fontformat(fmt)
 
     def onAutoLayoutTextblks(self):
@@ -631,7 +635,9 @@ class SceneTextManager(QObject):
         '''
         auto text layout, vertical writing is not supported yet.
         '''
+
         
+        # Step 1: Initial setup and checks
         old_br = blkitem.absBoundingRect()
         img = self.imgtrans_proj.img_array
         if img is None:
@@ -644,8 +650,12 @@ class SceneTextManager(QObject):
         if blkitem.blk.vertical:
             return
 
+        # Step 2: Font and text setup
         blk_font = blkitem.font()
         fmt = blkitem.get_fontformat()
+
+        # print(f'Font: {blk_font}, {blk_font.italic()}')
+        # print(f'Format: {fmt}')
         blk_font.setLetterSpacing(QFont.SpacingType.PercentageSpacing, fmt.letter_spacing * 100)
         text_size_func = lambda text: get_text_size(QFontMetrics(blk_font), text)
 
@@ -654,6 +664,7 @@ class SceneTextManager(QObject):
             text = blkitem.toPlainText()
             restore_charfmts = True
 
+        # Step 3: Mask and bounding rectangle setup
         if mask is None:
             im_h, im_w = img.shape[:2]
             bounding_rect = blkitem.absBoundingRect(max_h=im_h, max_w=im_w)
@@ -672,16 +683,19 @@ class SceneTextManager(QObject):
             mask_xyxy = [bounding_rect[0], bounding_rect[1], bounding_rect[0]+bounding_rect[2], bounding_rect[1]+bounding_rect[3]]
         region_x, region_y, region_w, region_h = region_rect
         
+        # Step 4: Text segmentation
         words, delimiter = seg_text(text, pcfg.module.translate_target)
         if len(words) == 0:
             return
 
+        # Step 5: Text layout calculation
         wl_list = get_words_length_list(QFontMetrics(blk_font), words)
         text_w, text_h = text_size_func(text)
         text_area = text_w * text_h
         line_height = int(round(fmt.line_spacing * text_h))
         delimiter_len = text_size_func(delimiter)[0]
  
+        # Step 6: Adaptive font size calculation
         adaptive_fntsize = False
         if self.auto_textlayout_flag and pcfg.let_fntsize_flag == 0 and pcfg.let_autolayout_flag and pcfg.let_autolayout_adaptive_fntsz:
             if blkitem.blk.src_is_vertical and blkitem.blk.vertical != blkitem.blk.src_is_vertical:
@@ -747,6 +761,7 @@ class SceneTextManager(QObject):
                 centroid[0] = int(abs_centroid[0] - mask_xyxy[0])
                 centroid[1] = int(abs_centroid[1] - mask_xyxy[1])
 
+        # Step 7: Text layout
         new_text, xywh = layout_text(mask, mask_xyxy, centroid, words, wl_list, delimiter, delimiter_len, blkitem.blk.angle, line_height, fmt.alignment, fmt.vertical, 0, padding, max_central_width)
 
         # font size post adjustment
@@ -785,6 +800,7 @@ class SceneTextManager(QObject):
             if ex_w > 0:
                 xywh[0] -= ex_w
 
+        # Step 8: Final text and format setup
         if restore_charfmts:
             char_fmts = blkitem.get_char_fmts()        
         
@@ -794,7 +810,7 @@ class SceneTextManager(QObject):
             self.pairwidget_list[blkitem.idx].e_trans.setPlainText(new_text)
         if restore_charfmts:
             self.restore_charfmts(blkitem, text, new_text, char_fmts)
-        blkitem.shrinkSize()
+        blkitem.shrinkSize(is_italic=fmt.italic)
         return True
     
     def restore_charfmts(self, blkitem: TextBlkItem, text: str, new_text: str, char_fmts: List[QTextCharFormat]):
