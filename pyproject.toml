@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "ballonstranslator"
+version = "0.1.0"
+description = ""
+authors = ["kagenihisomi <asdftoger@gmail.com>"]
+readme = "README.md"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = ">=3.11, <3.13"
+ipykernel = "^6.27.1"
+torch = "^2.1"
+torchvision = "^0.16.2"
+fire = "^0.5.0"
+pyside6 = "^6.6.1"
+
+[tool.poetry.group.format.dependencies]
+black = "^23.1.0"
+autoflake = "^2.0.2"
+isort = "^5.13.1"
+
+[tool.poetry.group.test.dependencies]
+pylint = "^3.0.3"
+pytest-cov = "^4.0.0"
+pytest-sugar = "^0.9.6"
+pytest = "^7.2.2"
+mypy = "^1.1.1"
+
+[tool.pylint]
+disable = """
+C,R,
+unused-wildcard-import,
+wildcard-import,
+unused-argument,
+unused-variable,
+"""
+output-format = "colorized"
+additional-builtins = "display"
+generated-members = ["torch.*", "cv2.*"]
+ignored-modules = "cv2"
+
+[tool.pytest.ini_options]
+addopts = "-ra -v -p no:faulthandler"
+minversion = "6.0"
+testpaths = ["tests"]
+
+[tool.isort]
+profile = 'black'
+multi_line_output = 3
+line_length = 100
+py_version = 310
