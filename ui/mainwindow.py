@@ -502,6 +502,21 @@ class MainWindow(mainwindow_cls):
         shortcutDelete = QShortcut(QKeySequence.StandardKey.Delete, self)
         shortcutDelete.activated.connect(self.shortcutDelete)
 
+        shortcutApplyFont = QShortcut(QKeySequence("Alt+Q"), self)
+        shortcutApplyFont.activated.connect(self.st_manager.onFormatTextblks)
+        shortcutAutoLayout = QShortcut(QKeySequence("Alt+W"), self)
+        shortcutAutoLayout.activated.connect(self.st_manager.onAutoLayoutTextblks)
+        shortcutAngleReset = QShortcut(QKeySequence("Alt+E"), self)
+        shortcutAngleReset.activated.connect(self.st_manager.onResetAngle)
+
+        shortcut_blktrans = QShortcut(QKeySequence("Alt+F"), self)
+        shortcut_blktrans.activated.connect(partial(self.on_run_blktrans, mode=2))
+        
+        shortcutFontSizeIncrease = QShortcut(QKeySequence("Ctrl+]"), self)
+        shortcutFontSizeIncrease.activated.connect(self.st_manager.formatpanel.fontsizebox.onUpBtnClicked)
+        shortcutFontSizeDecrease = QShortcut(QKeySequence("Ctrl+["), self)
+        shortcutFontSizeDecrease.activated.connect(self.st_manager.formatpanel.fontsizebox.onDownBtnClicked)
+
         drawpanel_shortcuts = {'hand': 'H', 'rect': 'R', 'inpaint': 'J', 'pen': 'B'}
         for tool_name, shortcut_key in drawpanel_shortcuts.items():
             shortcut = QShortcut(QKeySequence(shortcut_key), self)
