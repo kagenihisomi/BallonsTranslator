@@ -253,20 +253,20 @@ class FontSizeBox(QFrame):
 
     def onUpBtnClicked(self):
         size = self.getFontSize()
-        newsize = int(round(size * 1.25))
+        newsize = int(round(size * 1.10))
         if newsize == size:
             newsize += 1
-        newsize = min(1000, newsize)
+        newsize = min(MAX_FONT_SIZE, newsize)
         if newsize != size:
             self.param_changed.emit('size', newsize)
             self.fcombobox.setCurrentText(str(newsize))
         
     def onDownBtnClicked(self):
         size = self.getFontSize()
-        newsize = int(round(size * 0.75))
+        newsize = int(round(size * 0.90))
         if newsize == size:
             newsize -= 1
-        newsize = max(1, newsize)
+        newsize = max(MIN_FONT_SIZE, newsize)
         if newsize != size:
             self.param_changed.emit('size', newsize)
             self.fcombobox.text_changed_by_user = False
@@ -950,6 +950,10 @@ class FontFormatPanel(Widget):
 
         self.vlayout = QVBoxLayout(self)
         self.vlayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
+        self.current_font_family_box= QComboBox(self)
+        self.current_font_size_box= QComboBox(self)
+
         self.familybox = FontFamilyComboBox(emit_if_focused=True, parent=self)
         self.familybox.setContentsMargins(0, 0, 0, 0)
         self.familybox.setObjectName("FontFamilyBox")
@@ -1051,6 +1055,13 @@ class FontFormatPanel(Widget):
         vl0.addWidget(self.textstyle_panel)
         vl0.setSpacing(0)
         vl0.setContentsMargins(0, 0, 0, 0)
+
+        vl1 = QVBoxLayout()
+        vl1.addWidget(self.current_font_family_box)
+        vl1.addWidget(self.current_font_size_box)
+        vl1.setSpacing(0)
+        vl1.setContentsMargins(0, 0, 0, 0)
+
         hl1 = QHBoxLayout()
         hl1.addWidget(self.familybox)
         hl1.addWidget(self.fontsizebox)
@@ -1085,6 +1096,7 @@ class FontFormatPanel(Widget):
         hl4.setSpacing(0)
 
         self.vlayout.addLayout(vl0)
+        self.vlayout.addLayout(vl1)
         self.vlayout.addLayout(hl1)
         self.vlayout.addLayout(hl2)
         self.vlayout.addLayout(hl3)
